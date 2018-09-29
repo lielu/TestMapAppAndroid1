@@ -1,9 +1,6 @@
 apply plugin: 'com.android.feature'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
-
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -20,14 +17,20 @@ android {
         }
     }
 }
-
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+//    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation project(':base')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.google.android.gms:play-services-maps:11.8.0'
+//    implementation files('libs/aws-apigateway-api-sdk-1.0.0.jar')
+//    implementation files('libs/com/amazonaws/aws-android-sdk-apigateway-core/2.7.2/aws-android-sdk-apigateway-core-2.7.2.jar')
+//    implementation files('libs/com/amazonaws/aws-android-sdk-core/2.7.2/aws-android-sdk-core-2.7.2.jar')
+    compile 'com.amazonaws:aws-android-sdk-core:2.2.+'
+    compile 'com.amazonaws:aws-android-sdk-lambda:2.2.+'
+}
 
+repositories {
 }
