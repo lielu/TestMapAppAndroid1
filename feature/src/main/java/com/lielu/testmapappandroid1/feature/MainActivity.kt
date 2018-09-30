@@ -46,9 +46,10 @@ class MainActivity : AppCompatActivity() {
 
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
 
+        /*
         // Create an instance of CognitoCachingCredentialsProvider
         val cognitoProvider = CognitoCachingCredentialsProvider(
-                this.applicationContext, "us-west-2:df2eeb71-a887-4898-bb04-a8a7ea175413", Regions.US_WEST_2)
+                this.applicationContext, "us-west-2:40c48e69-03f3-4673-9732-e93be96d17b3", Regions.US_WEST_2)
 
 // Create LambdaInvokerFactory, to be used to instantiate the Lambda proxy.
         val factory = LambdaInvokerFactory(this.applicationContext,
@@ -88,5 +89,6 @@ class MainActivity : AppCompatActivity() {
                 message.setText(result.greetings)
             }
         }.execute(request)
+*/
     }
 }

@@ -21,11 +21,13 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.media.Image
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.SystemClock
 import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
+import android.support.design.widget.TextInputEditText
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
@@ -41,6 +43,10 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import android.widget.Toast
+import com.amazonaws.auth.CognitoCachingCredentialsProvider
+import com.amazonaws.mobileconnectors.lambdainvoker.LambdaFunctionException
+import com.amazonaws.mobileconnectors.lambdainvoker.LambdaInvokerFactory
+import com.amazonaws.regions.Regions
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
@@ -56,6 +62,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.ArrayList
 import java.util.Random
 
@@ -375,6 +382,58 @@ class MarkerDemoActivity :
     @Suppress("UNUSED_PARAMETER")
     fun onToggleFlat(view: View) {
         checkReadyThen { markerRainbow.map { marker -> marker.isFlat = flatBox.isChecked } }
+    }
+
+    private fun submitComment(view: View) {
+        val commentString = this.findViewById<TextInputEditText>(R.id.comment).text
+        val latitude = lastSelectedMarker?.position?.latitude
+        val longitude = lastSelectedMarker?.position?.longitude
+
+        // Create an instance of CognitoCachingCredentialsProvider
+        val cognitoProvider = CognitoCachingCredentialsProvider(
+                this.applicationContext, "us-west-2:40c48e69-03f3-4673-9732-e93be96d17b3", Regions.US_WEST_2)
+
+        // Create LambdaInvokerFactory, to be used to instantiate the Lambda proxy.
+        val factory = LambdaInvokerFactory(this.applicationContext,
+                Regions.US_WEST_2, cognitoProvider)
+
+        // Create the Lambda proxy object with a default Json data binder.
+        // You can provide your own data binder by implementing
+        // LambdaDataBinder.
+        val addCommentInterface = factory.build(TestAddCommentInterface::class.java)
+
+        val request = AddCommentRequestClass(latitude.toString(), longitude.toString(), commentString.toString())
+
+// The Lambda function invocation results in a network call.
+// Make sure it is not called from the main thread.
+        object : AsyncTask<AddCommentRequestClass, Void, ResponseClass>() {
+            protected override fun doInBackground(vararg params: AddCommentRequestClass): ResponseClass? {
+                // invoke "echo" method. In case it fails, it will throw a
+                // LambdaFunctionException.
+                try {
+                    return addCommentInterface.AddCommentFunction(params[0])
+                } catch (lfe: LambdaFunctionException) {
+                    Log.e("Tag", "Failed to invoke echo", lfe)
+                    return null
+                }
+
+            }
+
+            protected override fun onPostExecute(result: ResponseClass?) {
+                if (result == null) {
+                    return
+                }
+
+                // Do a toast
+                Toast.makeText(this@MarkerDemoActivity, result.greetings, Toast.LENGTH_LONG).show()
+                //message.setText(result.greetings)
+            }
+        }.execute(request)
+
+    }
+
+    fun onCommentSubmit(view: View) {
+        submitComment(view)
     }
 
     //
