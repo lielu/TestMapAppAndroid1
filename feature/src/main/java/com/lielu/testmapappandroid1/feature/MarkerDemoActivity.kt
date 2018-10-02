@@ -16,6 +16,7 @@
 
 package com.lielu.testmapappandroid1.feature
 
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -28,6 +29,8 @@ import android.os.SystemClock
 import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.design.widget.TextInputEditText
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
@@ -62,9 +65,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.ArrayList
 import java.util.Random
+import java.lang.SecurityException
 
 /**
  * This shows how to place markers on a map.
@@ -173,6 +178,89 @@ class MarkerDemoActivity :
         }
     }
 
+    private var mLocationPermissionGranted = false
+
+    private val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
+
+    private fun getLocationPermission() {
+        /*
+     * Request location permission, so that we can get the location of the
+     * device. The result of the permission request is handled by a callback,
+     * onRequestPermissionsResult.
+     */
+        if (ContextCompat.checkSelfPermission(this.applicationContext,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>,
+                                            grantResults: IntArray) {
+        mLocationPermissionGranted = false
+        when (requestCode) {
+            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mLocationPermissionGranted = true
+                }
+            }
+        }
+        updateLocationUI()
+    }
+
+    private fun updateLocationUI() {
+        try {
+            if (mLocationPermissionGranted) {
+                with(map) {
+                    setMyLocationEnabled(true)
+                    getUiSettings().setMyLocationButtonEnabled(true)
+                }
+            } else {
+                with(map) {
+                    setMyLocationEnabled(false)
+                    getUiSettings().setMyLocationButtonEnabled(false)
+                }
+//                mLastKnownLocation = null
+                getLocationPermission()
+            }
+        } catch (e: SecurityException) {
+            Log.e("Exception: %s", e.message)
+        }
+    }
+
+    private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
+
+    private var mLatitude : Double = 0.0
+    private var mLongtitude : Double = 0.0
+
+    private fun getDeviceLocation() {
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        try {
+            if (mLocationPermissionGranted) {
+                mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+                mFusedLocationProviderClient.lastLocation
+                        .addOnCompleteListener(this) { task ->
+                            if (task.isSuccessful && task.result != null) {
+                                mLatitude = task.result.latitude
+                                mLongtitude = task.result.longitude
+                            } else {
+                                Log.w(TAG, "getLastLocation:exception", task.exception)
+//                                showSnackbar(R.string.no_location_detected)
+                            }
+                        }
+            }
+        } catch(e : SecurityException)  {
+            Log.e("Exception: %s", e.message);
+    }
+}
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.marker_demo)
@@ -215,6 +303,10 @@ class MarkerDemoActivity :
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         OnMapAndViewReadyListener(mapFragment, this)
+
+        getLocationPermission()
+
+        getDeviceLocation()
     }
 
     /**
@@ -384,7 +476,7 @@ class MarkerDemoActivity :
         checkReadyThen { markerRainbow.map { marker -> marker.isFlat = flatBox.isChecked } }
     }
 
-    private fun submitComment(view: View) {
+    private fun submitComment() {
         val commentString = this.findViewById<TextInputEditText>(R.id.comment).text
         val latitude = lastSelectedMarker?.position?.latitude
         val longitude = lastSelectedMarker?.position?.longitude
@@ -402,7 +494,8 @@ class MarkerDemoActivity :
         // LambdaDataBinder.
         val addCommentInterface = factory.build(TestAddCommentInterface::class.java)
 
-        val request = AddCommentRequestClass(latitude.toString(), longitude.toString(), commentString.toString())
+//        val request = AddCommentRequestClass(latitude.toString(), longitude.toString(), commentString.toString())
+        val request = AddCommentRequestClass(mLatitude.toString(), mLongtitude.toString(), commentString.toString())
 
 // The Lambda function invocation results in a network call.
 // Make sure it is not called from the main thread.
@@ -433,7 +526,7 @@ class MarkerDemoActivity :
     }
 
     fun onCommentSubmit(view: View) {
-        submitComment(view)
+        submitComment()
     }
 
     //

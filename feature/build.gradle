@@ -25,6 +25,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.google.android.gms:play-services-maps:11.8.0'
+    implementation 'com.google.android.gms:play-services-location:11.8.0'
 //    implementation files('libs/aws-apigateway-api-sdk-1.0.0.jar')
 //    implementation files('libs/com/amazonaws/aws-android-sdk-apigateway-core/2.7.2/aws-android-sdk-apigateway-core-2.7.2.jar')
 //    implementation files('libs/com/amazonaws/aws-android-sdk-core/2.7.2/aws-android-sdk-core-2.7.2.jar')

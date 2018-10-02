@@ -1,6 +1,7 @@
 package com.lielu.testmapappandroid1.feature
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
@@ -16,6 +17,13 @@ import com.amazonaws.regions.Regions
 import android.os.AsyncTask.execute
 import android.util.Log
 import android.widget.Toast
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.support.annotation.NonNull
+
+
+
+
 
 
 class MainActivity : AppCompatActivity() {
